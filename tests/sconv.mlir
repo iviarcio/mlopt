@@ -1,9 +1,9 @@
 
-// RUN: mlir-opt "$1".mlir -linalg-generalize-named-ops -o "$1"_gen.mlir
+// RUN: mlir-opt sconv.mlir -linalg-generalize-named-ops -o gsconv.mlir
 
 !input_tensor_t = tensor<1x128x66x66xf32>
 !weight_tensor_t = tensor<256x128x3x3xf32>
-!output_tensor_t = tensor<1x256x4096x1xf32>
+!output_tensor_t = tensor<1x256x64x64xf32>
 
 // Função nomeada a ser generalizada.
 func.func @conv_2d_nchw_fchw(%in: !input_tensor_t, %wei: !weight_tensor_t,

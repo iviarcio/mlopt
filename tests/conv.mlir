@@ -1,5 +1,5 @@
 
-// RUN: mlir-opt "$1".mlir -linalg-generalize-named-ops -o "$1"_gen.mlir
+// RUN: mlir-opt conv.mlir -linalg-generalize-named-ops -o gconv.mlir
 
 !input_tensor_t = tensor<1x128x66x66xf32>
 !weight_tensor_t = tensor<256x128x3x3xf32>

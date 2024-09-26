@@ -1,4 +1,6 @@
-// The original gconv.mlir, applying linalg.generalize-named-ops on conv.mlir
+// RUN: mlir-opt tests/transf_gsconv.mlir --pass-pipeline="builtin.module(transform-interpreter{debug-bind-trailing-args=linalg.generic},canonicalize,cse,symbol-dce)" -o results/tiled_gsconv.mlir
+
+// Below, the original gconv.mlir, after applying linalg pass generalize-named-ops on conv.mlir
 
 // definitions:
 // d0 = batch; d1 = filtros; d2 = linhas saida; d3 = colunas saida; d4 = canais; d5 = linhas do filtro; d6 = colunas do filtro
@@ -18,7 +20,7 @@
 //   }
 // }
 
-// The modified gconv.mlir that's calling gsconv.mlir to address SConv transformations
+// The manually modified gconv.mlir to address SConv transformations
 // the output, wo, ho (64x64) is linearized to one-dim 4096
 // d2 (64) = wo and d3 (64) = ho is modified to d3 (4096) to represent w0xho
 
@@ -37,3 +39,41 @@ module {
   }
 }
 
+module attributes {transform.with_named_sequence} {
+
+  transform.named_sequence @__transform_main(
+    %arg0: !transform.any_op,
+    %conv: !transform.op<"linalg.generic">) {
+
+    transform.debug.emit_remark_at %conv, "Input conv" : !transform.op<"linalg.generic">
+
+    %conv2, %loops2:4 = transform.structured.tile_using_for %conv
+      // N, F, OHW, C, KH, KW
+      tile_sizes [1, 64, 32, 16, 0, 0]   // 16 canais , 32 colunas, 64 filtros, 2o, 1 tile de uma linha
+      interchange = [0, 4, 3, 2, 1] // 4 = F, 3: OH, 2:OW, 1:C
+      : (!transform.op<"linalg.generic">)
+      -> (!transform.op<"linalg.generic">, !transform.any_op, 
+          !transform.any_op, !transform.any_op, !transform.any_op, 
+          !transform.any_op)
+
+    transform.debug.emit_remark_at %conv2, "conv2" : !transform.op<"linalg.generic">
+
+//  %conv3, %loops3:2 = transform.structured.tile_using_for %conv2
+//    // N, F, OHW, C, KH, KW
+//    tile_sizes [0, 8, 16, 0, 0, 0]
+//    interchange = [1, 0]
+//    : (!transform.op<"linalg.generic">)
+//    -> (!transform.op<"linalg.generic">, !transform.any_op,
+//        !transform.any_op)
+//
+//  transform.debug.emit_remark_at %conv3, "conv3" : !transform.op<"linalg.generic">
+
+    // transform.apply_patterns to %conv3 {
+    // transform.apply_patterns.canonicalization
+    //  transform.apply_patterns.linalg.tiling_canonicalization
+    // } : !transform.linalg.generic
+
+    transform.yield
+  }
+
+}

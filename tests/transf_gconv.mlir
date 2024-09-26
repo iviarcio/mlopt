@@ -1,7 +1,4 @@
-// RUN: mlir-opt "$1".mlir --pass-pipeline=" \
-// RUN:   builtin.module(transform-interpreter{ \
-// RUN:     debug-bind-trailing-args=linalg.generic},canonicalize,cse,symbol-dce)" \
-// RUN:   -o "$1"_res.mlir
+// RUN: mlir-opt tests/transf_gconv.mlir --pass-pipeline="builtin.module(transform-interpreter{debug-bind-trailing-args=linalg.generic},canonicalize,cse,symbol-dce)" -o results/tiled_gconv.mlir
 
 !input_tensor_t = tensor<1x128x66x66xf32>
 !weight_tensor_t = tensor<256x128x3x3xf32>
@@ -16,6 +13,10 @@
 //     outs(%out: !output_tensor_t) -> !output_tensor_t
 //   return %res : !output_tensor_t
 // }
+
+// linalg-generalize-named-ops:
+
+// d0 = batch; d1 = filtros; d2 = linhas saida; d3 = colunas saida; d4 = canais; d5 = linhas do filtro; d6 = colunas do filtro
 
 #map = affine_map<(d0, d1, d2, d3, d4, d5, d6) -> (d0, d4, d2 + d5, d3 + d6)>
 #map1 = affine_map<(d0, d1, d2, d3, d4, d5, d6) -> (d1, d4, d5, d6)>
