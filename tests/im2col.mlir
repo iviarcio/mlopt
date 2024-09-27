@@ -1,7 +1,4 @@
-// RUN: mlir-opt "$1".mlir --pass-pipeline=" \
-// RUN:   builtin.module(transform-interpreter{ \
-// RUN:     debug-bind-trailing-args=linalg.conv_2d_nchw_fchw},canonicalize,cse,symbol-dce)" \
-// RUN:   -o "$1"_res.mlir
+// RUN: mlir-opt tests/im2col.mlir --pass-pipeline="builtin.module(transform-interpreter{debug-bind-trailing-args=linalg.conv_2d_nchw_fchw},canonicalize,cse,symbol-dce)" -o ressults/im2col_res.mlir
 
 !input_tensor_t = tensor<1x128x66x66xf32>
 !weight_tensor_t = tensor<256x128x3x3xf32>
